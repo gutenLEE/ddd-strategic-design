@@ -190,3 +190,103 @@ docker compose -p kitchenpos up -d
 | 매장 주문 | EAT IN order | 고객의 주문이 수락되고 주문한 메뉴상품이 제공될 때 배달로 수령하는 주문이다 |
 
 ## 모델링
+
+## 상품
+- `Product`는 `quantity`을 가진다
+- `Product`는 `price`을 가진다
+  - 정책
+    - `Product`의 `price`는 0원 이상이어야 한다
+- `Product`는 `name`을 가진다
+  - 정책
+    - `Product`의 `name`은 `비속어`가 포함될 수 없다
+- 상품 정책
+  - `Product`를 `등록`할 수 있다
+  - `Product`의 `목록`을 조회할 수 있다
+  - `Product`의 `price`를 `변경`할 수 있다
+  - `Product`의 `price`가 변경될 때 `Menu`의 `price`보다 크면 `Menu`가 `비노출`이 된다
+
+## 메뉴 그룹
+- `MenuGroup`은 `name`을 가진다
+- `MenuGroup`을 `등록`할 수 있다
+- `MenuGroup`의 `name`은 `비워 둘 수 없다`
+- `MenuGroup`의 `목록`을 조회할 수 있다
+
+## 메뉴
+- `Menu`는 `name`을 가진다
+  - 정책
+    - `Menu`의 `name`은 `비속어`가 포함될 수 없다
+- `Menu`는 `price`를 가진다
+  - 정책
+    - `Menu`의 `price`를 `변경`할 수 있다
+    - `Menu`의 `price`는 0원 이상이어야 한다
+    - `Menu`의 `price`가 `MenuProduct`의 `price`의 합보다 크거나 같아야 한다'
+- `Menu`는 `display`를 가진다
+  - 정책
+    - `Menu`를 `노출`할 수 있다
+    - `Menu`를 `비노출`할 수 있다
+    - `Menu`의 `가격`이 `메뉴에 속한 상품 금액의 합`보다 높을 경우 `Menu`를 `노출`할 수 없다
+- `Menu`는 메뉴에 속한 상품을 표현하는 `MenuProduct`를 가진다
+  - 정책
+      - `MenuProduct`의 `quantity`는 0 이상이어야 한다
+      - `MenuProduct`의 `product`는 `등록`되어 있어야 한다
+- 정책
+  - `Menu`를 `등록`할 수 있다
+  - `Menu`의 `목록`을 조회할 수 있다
+ 
+
+- 메뉴 정책
+  - `Menu`의 `목록`을 조회할 수 있다
+  - `Menu`는 `MenuGroup`에 속해야 한다
+
+## 주문 테이블
+- `OrderTable`은 `name`을 가진다
+  - 정책
+    - `OrderTable`의 `name`은 `비워 둘 수 없다`
+    - `OrderTable`은 `name`은 `비속어`가 포함될 수 없다
+- `OrderTable`은 테이블에 앉은 고객수를 표현하는 `numberOfGuests`를 가진다
+  - 정책
+    - `OrderTable`의 `numberOfGuests`0 이상이어야 한다
+    - `OrderTable`이 `numberofGuests`를 `변경`할 수 있다
+    - `OrderTable`이 `빈 테이블`이면 `numberOfGuests`를 `변경`할 수 없다
+- 정책
+  - `OrderTable`을 `등록`할 수 있다
+  - `OrderTable`을 `채운다`
+  - `OrderTable`을 `치운다`
+
+## 주문
+- `Order`는 주문 유형을 표현하는 `OrderType`을 가진다
+  - `OrderType`은 `DELIVERY`, `TO_GO`, `EAT_IN`이 있다
+- `Order`는 고객이 구매를 요청한 메뉴를 표현하는 `OrderLineItem`을 가진다
+  - `OrderLineItem`은 `Menu`, `price`, `quantity`를 가진다
+- `Order`는 주문 상태를 표현하는 `OrderStatus`를 가진다
+  - `OrderStatus`는 `WAITING`, `ACCEPTED`, `SERVED`, `DELIVERING`, `DELIVERED`, `COMPLETED`가 있다
+- `Order`는 `OrderTable`를 가진다
+  - 정책
+    - `OrderTable`은 `매장주문`의 경우에만 가질 수 있다
+- `Order`는 배달 주소를 표현하는 `deliveryAddress`를 가진다
+  - 정책
+    - `deliveryAddress`는`배달 주문`의 경우에만 가질 수 있다
+- 주문 정책
+  - `비노출` `Menu`는 주문할 수 없다
+  - `OrderLineItem`의 `price`는 `Mene`의 `가격`과 일치해야 한다
+  - `Order`를 생성하면 `OrderStatus`는 `WAITING`이다
+  - `생성된 주문`을 `접수`하면 `OrderStatus`는 `ACCEPTED`가 된다
+  - `주문한 메뉴 상품이 조리되면` `서빙`할 수 있다
+- 배달 주문 정책
+  - `deliveryAddress`는 `비워 둘 수 없다`
+  - `배달 대행사`에게 `배달 요청`을 할 수 있다
+  - `OrderStatus`가 `SERVED`일때만 `라이더`가 `배달`을 시작할 수 있다
+  - `라이더`가 `배달`을 `시작`하면 `OrderStatus`가 `DELIVERING`으로 변경된다
+  - `라이더`가 `배달`을 `완료`하면 `OrderStatus`가 `DELIVERED`으로 변경된다
+  - `라이더`가 `배달`을 `완료`하면 `OrderStatus`가 `COMPLETED`로 변경된다
+- 포장 주문 정책
+  - `포장 주문`은 `OrderLineItem`의 `수량`은 0 보다 커야 한다
+  - `OrderStatus`가 `SERVED`일때만 `COMPLETED`로 변경된다
+- 매장 주문 정책
+  - `매장 주문`이 가진 `OrderLineItem`의 `수량`은 0 보다 작을 수 있다
+  - `매장 주문`시 `OrderTable`를 반드시 가져야 한다
+  - `OrderTable`은 `손님이 있는 테이블`만 주문이 등록될 수 있다
+  - `OrderStatus`가 `SERVED`일때만 `COMPLETED`로 변경된다
+  - `OrderStatus`가 `COMPLETED`일때 `OrderTable`이 `빈 테이블`로 변경된다
+- 주문 가격 정책
+  - `OrderLineItem`의 `가격`의 총 합계는 `메뉴에 속한 상품 금액의 합`과 같아야 한다
