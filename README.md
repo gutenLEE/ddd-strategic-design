@@ -239,6 +239,8 @@ docker compose -p kitchenpos up -d
     - `OrderTable`이 `빈 테이블`이면 `numberOfGuests`를 `변경`할 수 없다
   - `OrderTable`을 `비우면` `quantity`가 0 이고 `occupied가 false` 이다
   - `OrderTable`을 `채우면` `quantity`가 0 보다 크고 `occupied가 true` 이다
+
+
   ```mermaid
   ---
   title: OrderTable
@@ -280,7 +282,9 @@ docker compose -p kitchenpos up -d
 ### 포장 주문
 - 포장 주문의 `OrderType`이 `TO_GO`여야 한다
 - 포장 주문의 상태는 `WAITING`, `ACCEPTED`, `SERVED`, `COMPLETED`순서로 변경된다
-- 포장 주문이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 커야 한다
+- 행위
+- `포장 주문`이 생성한다
+  - 포장 주문이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 커야 한다
 
 ### 매장 주문
 - 매장 주문의 `OrderType`이 `EAT_IN`여야 한다
