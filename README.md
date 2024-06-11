@@ -190,3 +190,144 @@ docker compose -p kitchenpos up -d
 | 매장 주문 | EAT IN order | 고객의 주문이 수락되고 주문한 메뉴상품이 제공될 때 배달로 수령하는 주문이다 |
 
 ## 모델링
+
+## 상품
+- `Product`는 `quantity`을 가진다
+- `Product`는 `price`을 가진다
+- `Product`는 `name`을 가진다
+  
+- 행위
+  - `Product`를 `등록`할 수 있다
+    - `Product`의 `name`은 `비속어`가 포함될 수 없다
+  - `Product`의 `price`를 `변경`할 수 있다
+    - `Product`의 `price`는 0원 이상이어야 한다
+  - `Product`의 `price`가 변경될 때 `Menu`의 `price`보다 크면 `Menu`가 `비노출`이 된다
+
+## 메뉴 그룹
+- `MenuGroup`은 `name`을 가진다
+- 행위
+  - `MenuGroup`을 `등록`할 수 있다
+    - `MenuGroup`의 `name`은 `비워 둘 수 없다`
+  - `MenuGroup`의 `목록`을 `조회`할 수 있다
+
+## 메뉴
+- `Menu`는 `name`을 가진다
+- `Menu`는 `price`를 가진다
+- `Menu`는 `display`를 가진다
+- `Menu`는 메뉴에 속한 상품을 표현하는 `MenuProduct`를 가진다
+- 메뉴 행위
+  - `Menu`를 `등록`할 수 있다
+    - `Menu`의 `name`은 `비속어`가 포함될 수 없다
+    - `Menu`의 `price`는 0원 이상이어야 한다
+    - `Menu`의 `price`가 `MenuProduct`의 `price`의 합보다 크거나 같아야 한다
+    - `MenuProduct`의 `quantity`는 0 이상이어야 한다
+    - `MenuProduct`의 `product`는 `등록`되어 있어야 한다
+  - `Menu`의 `목록`을 조회할 수 있다
+  - `Menu`의 `price`를 `변경`할 수 있다
+  - `Menu`를 `노출`할 수 있다
+    - `Menu`의 `가격`이 `메뉴에 속한 상품 금액의 합`보다 높을 경우 `Menu`를 `노출`할 수 없다
+  - `Menu`를 `비노출`할 수 있다
+
+## 주문 테이블
+- `OrderTable`은 `name`을 가진다
+- `OrderTable`은 테이블에 앉은 고객수를 표현하는 `numberOfGuests`를 가진다
+- 행위 
+  - `OrderTable`을 `등록`할 수 있다
+    - `OrderTable`의 `name`은 `비워 둘 수 없다`
+    - `OrderTable`은 `name`은 `비속어`가 포함될 수 없다
+  - `OrderTable`을 `변경`할 수 있다
+    - `OrderTable`이 `빈 테이블`이면 `numberOfGuests`를 `변경`할 수 없다
+  - `OrderTable`을 `비우면` `quantity`가 0 이고 `occupied가 false` 이다
+  - `OrderTable`을 `채우면` `quantity`가 0 보다 크고 `occupied가 true` 이다
+
+
+  ```mermaid
+  ---
+  title: OrderTable
+  ---
+  flowchart LR
+  Customer -->|sit| OrderTable
+  Customer -->|create| B{OrderTable exist and occupied?}
+  B --> Order
+  Order -->|clear| OrderTable
+  ```
+
+
+
+## 주문
+- `Order`은 주문 유형을 표현하는 `OrderType`을 갖는다
+- `Order`은 주문 상태를 표현하는 `OrderStatus`를 갖는다
+- `Order`는 고객의 주문 항목을 표현하는 `List<OrderLineItem>`을 가진다
+  - `OrderLineItem`은 `Menu`, `price`, `quantity`를 가진다
+- 행위
+  - `Order`를 생성한다
+    - `주문`을 생성하려면 `List<OrderLineItem>`이 size가 1개 이상이어야 한다 
+    - `List<OrderLineItem>`의 `가격`의 총 합계는 `메뉴의 가격 합`과 같아야 한다 
+    - `비노출 메뉴`는 주문할 수 없다
+    - `주문 항목`의 `Menu`는 등록된 메뉴여야 주문할 수 있다
+  
+### 배달 주문
+- 배달 주문의 `OrderType`은 `DELIVERY`여야 한다 
+- 배달 주문의 상태는 `WAITING`, `ACCEPTED`, `SERVED`, `DELIVERING`, `DELIVERED`, `COMPLETED`순서로 변경된다 
+- 배달 주문은 `deliveryAddress`를 가져야 한다
+- 행위
+  - '배달 주문'을 생성한다  
+    - 배달 주문이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 커야 한다
+  - `배달 대행사`에게 `배달 요청`을 할 수 있다
+  - `OrderStatus`가 `SERVED`일때만 `라이더`가 `배달`을 시작할 수 있다
+  - `라이더`가 `배달`을 `시작`하면 `OrderStatus`가 `DELIVERING`으로 변경된다
+  - `라이더`가 `배달`을 `완료`하면 `OrderStatus`가 `DELIVERED`으로 변경된다
+  - `라이더`가 `배달`을 `완료`하면 `OrderStatus`가 `COMPLETED`로 변경된다
+
+### 포장 주문
+- 포장 주문의 `OrderType`이 `TO_GO`여야 한다
+- 포장 주문의 상태는 `WAITING`, `ACCEPTED`, `SERVED`, `COMPLETED`순서로 변경된다
+- 행위
+- `포장 주문`이 생성한다
+  - 포장 주문이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 커야 한다
+
+### 매장 주문
+- 매장 주문의 `OrderType`이 `EAT_IN`여야 한다
+- 매장 주문의 상태는 `WAITING`, `ACCEPTED`, `SERVED`, `COMPLETED`순서로 변경된다
+- 매장 주문은 `OrderTable`을 가진다
+- 행위
+  - `매장 주문`을 생성한다
+    - `매장 주문`이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 작을 수 있다
+    - `매장 주문`시 `OrderTable`를 반드시 가져야 한다
+    - `손님이 있는 테이블`만 `주문`을 할 수 있다
+  - `OrderStatus`가 `SERVED`일때만 `COMPLETED`로 변경된다
+  - `OrderStatus`가 `COMPLETED`일때 `OrderTable`을 `빈 테이블`로 변경할 수 있다
+
+--- 
+
+```mermaid
+---
+title: Order 객체 그래프
+---
+erDiagram
+    Order ||--|{ OrderLineItem: has
+    OrderLineItem ||--|| Menu: has
+    Menu ||--|{ MenuProduct : has
+    MenuProduct ||--|| Product: has
+
+```
+
+```mermaid
+---
+title: Order 상태 전이
+---
+stateDiagram-v2
+    direction LR
+    [*] --> WAITING
+    COMPLETED --> [*]
+
+    WAITING --> ACCEPTED
+    ACCEPTED --> SERVED
+    SERVED -->DELIVERING 
+    state 배달주문 {
+        DELIVERING --> DELIVERED
+    }
+    SERVED --> COMPLETED
+    DELIVERED --> COMPLETED
+    COMPLETED --> [*]
+```
