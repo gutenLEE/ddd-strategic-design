@@ -283,7 +283,7 @@ docker compose -p kitchenpos up -d
 - 포장 주문의 `OrderType`이 `TO_GO`여야 한다
 - 포장 주문의 상태는 `WAITING`, `ACCEPTED`, `SERVED`, `COMPLETED`순서로 변경된다
 - 행위
-- `포장 주문`이 생성한다
+- `포장 주문`을 생성한다
   - 포장 주문이 가진 `List<OrderLineItem>`의 `수량`은 0 보다 커야 한다
 
 ### 매장 주문
