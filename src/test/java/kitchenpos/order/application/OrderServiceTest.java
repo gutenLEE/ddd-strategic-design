@@ -1,10 +1,10 @@
 package kitchenpos.order.application;
 
 import kitchenpos.infra.FakeKitchenridersClient;
-import kitchenpos.menu.domain.InMemoryMenuRepository;
+import kitchenpos.menu.repository.InMemoryMenuRepository;
 import kitchenpos.menu.domain.MenuRepository;
-import kitchenpos.order.domain.InMemoryOrderRepository;
-import kitchenpos.order.domain.InMemoryOrderTableRepository;
+import kitchenpos.order.repository.InMemoryOrderRepository;
+import kitchenpos.order.repository.InMemoryOrderTableRepository;
 import kitchenpos.order.domain.Order;
 import kitchenpos.order.domain.OrderLineItem;
 import kitchenpos.order.domain.OrderRepository;
